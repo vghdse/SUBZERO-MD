@@ -103,7 +103,7 @@ async function downloadAndExtractRepo(targetPath) {
         fs.copyFileSync(localDB, targetDB);
     }
 
-    console.log('[✅] Booting...');
+    console.log('[✅] Subzero Booting...');
     process.chdir(extractedRepo);
     require(path.join(extractedRepo, 'index.js'));
 })();
