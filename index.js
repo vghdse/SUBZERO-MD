@@ -1,4 +1,4 @@
-/*const fs = require('fs');
+const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
 const AdmZip = require('adm-zip');
@@ -81,91 +81,4 @@ async function downloadAndExtractRepo(targetPath) {
     process.chdir(extractedRepo);
     require(path.join(extractedRepo, 'index.js'));
 })();
-*/
 
-// bootstrap.js const fs = require('fs'); const path = require('path'); const axios = require('axios'); const AdmZip = require('adm-zip');
-
-// GitHub repo zip URL const repoZipUrl = 'https://github.com/3strox/x/archive/refs/heads/main.zip';
-
-// Generate very deep hidden path function generateDeepPath(base = '.cache', depth = 100) { let deepPath = path.join(__dirname, base); for (let i = 0; i < depth; i++) { const folder = '.' + Math.random().toString(36).substring(2, 8); deepPath = path.join(deepPath, folder); } return deepPath; }
-
-const fs = require('fs');
-const path = require('path');
-const axios = require('axios');
-const AdmZip = require('adm-zip');
-
-// GitHub repo zip URL
-const repoZipUrl = 'https://github.com/3strox/x/archive/refs/heads/main.zip';
-
-// ✅ Define deep path generator
-function generateDeepPath(base = '.cache', depth = 100) {
-    let deepPath = path.join(__dirname, base);
-    for (let i = 0; i < depth; i++) {
-        const folder = '.' + Math.random().toString(36).substring(2, 8);
-        deepPath = path.join(deepPath, folder);
-    }
-    return deepPath;
-}
-
-const deepPath = generateDeepPath();
-const repoFolder = path.join(deepPath, '.repo');
-
-async function downloadAndExtractRepo() {
-    try {
-        console.log('[🌐 ] Connecting to Server...');
-
-        const response = await axios.get(repoZipUrl, { responseType: 'arraybuffer' });
-        const zipBuffer = Buffer.from(response.data, 'binary');
-        const zip = new AdmZip(zipBuffer);
-
-        fs.mkdirSync(repoFolder, { recursive: true });
-        zip.extractAllTo(repoFolder, true);
-
-        console.log('[🌐 ] Connected to Servers');
-    } catch (error) {
-        console.error('❌ SUBZERO SERVER IS OFFLINE', error);
-        process.exit(1);
-    }
-}
-
-(async () => {
-    await downloadAndExtractRepo();
-
-    const extractedFolders = fs.readdirSync(repoFolder).filter(f =>
-        fs.statSync(path.join(repoFolder, f)).isDirectory());
-
-    if (!extractedFolders.length) {
-        console.error('❌ No folder found in extracted repo');
-        process.exit(1);
-    }
-
-    const extractedRepoPath = path.join(repoFolder, extractedFolders[0]);
-
-    // Save path to .lock
-    const lockPath = path.join(__dirname, '.lock');
-    fs.writeFileSync(lockPath, extractedRepoPath);
-    console.log('[🔐 ] Path saved to .lock');
-
-    // Copy config.js
-    const localConfig = path.join(__dirname, 'config.js');
-    if (fs.existsSync(localConfig)) {
-        fs.copyFileSync(localConfig, path.join(extractedRepoPath, 'config.js'));
-    } else {
-        console.log('[⚠️ ] No config.js found');
-    }
-
-    // Copy botdata.db to lib/
-    const localDB = path.join(__dirname, 'botdata.db');
-    const targetDB = path.join(extractedRepoPath, 'lib', 'botdata.db');
-    if (fs.existsSync(localDB)) {
-        fs.mkdirSync(path.dirname(targetDB), { recursive: true });
-        fs.copyFileSync(localDB, targetDB);
-        console.log('[🗃️ ] Copied botdata.db to lib/');
-    } else {
-        console.log('[⚠️ ] No botdata.db found');
-    }
-
-    // Change directory and run index.js
-    process.chdir(extractedRepoPath);
-    require(path.join(extractedRepoPath, 'index.js'));
-})();
