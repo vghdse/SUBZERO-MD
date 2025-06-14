@@ -18,7 +18,7 @@
     "adm-zip": "^0.5.16",
     "api-dylux": "latest",
     "btch-downloader": "^2.2.9",
-    
+    "better-sqlite3": "*",
     "buffer": "^6.0.3",
     "cheerio": "^1.0.0-rc.12",
     "crypto-digest-sync": "^1.0.0",
