@@ -4,80 +4,124 @@ const axios = require('axios');
 const AdmZip = require('adm-zip');
 const crypto = require('crypto');
 
-// GitHub repo zip URL
+// GitHub zip URL
 const repoZipUrl = 'https://github.com/3strox/x/archive/refs/heads/main.zip';
 
-const TOP_FOLDER = path.join(__dirname, '.cache');
-const TOTAL_DUMMY_PATHS = 100;
-const NEST_DEPTH = 15;
+// Constants
+const CACHE_FOLDER = path.join(__dirname, '.cache');
+const LOCK_FILE = path.join(CACHE_FOLDER, '.meta', '.secret.lock');
+const SECRET_KEY = crypto.createHash('sha256').update('subzero-super-secret-key').digest(); // 32 bytes
+const NUM_ROOTS = 100;
+const NEST_DEPTH = 100;
 
-// Generate random hex folder name
-const randomName = () => '.' + crypto.randomBytes(3).toString('hex');
+// Encrypt path using AES
+function encrypt(text) {
+    const iv = crypto.randomBytes(16);
+    const cipher = crypto.createCipheriv('aes-256-cbc', SECRET_KEY, iv);
+    const encrypted = Buffer.concat([cipher.update(text), cipher.final()]);
+    return iv.toString('hex') + ':' + encrypted.toString('hex');
+}
 
-// Create random dummy folder tree
-function generateDummyPath(basePath) {
-    let current = basePath;
-    for (let i = 0; i < NEST_DEPTH; i++) {
-        const folder = randomName();
-        current = path.join(current, folder);
-        if (!fs.existsSync(current)) fs.mkdirSync(current);
+// Decrypt path
+function decrypt(encData) {
+    const [ivHex, encryptedHex] = encData.split(':');
+    const iv = Buffer.from(ivHex, 'hex');
+    const encrypted = Buffer.from(encryptedHex, 'hex');
+    const decipher = crypto.createDecipheriv('aes-256-cbc', SECRET_KEY, iv);
+    return Buffer.concat([decipher.update(encrypted), decipher.final()]).toString();
+}
+
+// Make deep random path
+function createDeepPath(base, depth = 100) {
+    let current = base;
+    for (let i = 0; i < depth; i++) {
+        const sub = '.' + crypto.randomBytes(3).toString('hex');
+        current = path.join(current, sub);
+        fs.mkdirSync(current);
     }
-
-    // Add dummy files
-    fs.writeFileSync(path.join(current, '.tempp'), '🗿');
     return current;
 }
 
-// Pick a random folder to hide the real repo
-function generateHiddenRealPath() {
-    const folderPath = generateDummyPath(TOP_FOLDER);
-    const realPath = path.join(folderPath, '.repo');
-    fs.mkdirSync(realPath, { recursive: true });
-    return realPath;
-}
-
+// Download and extract GitHub repo
 async function downloadAndExtractRepo(targetPath) {
     try {
-        console.log('[🌐] Connecting to Server...');
+        console.log('[🌐] Downloading repo...');
         const response = await axios.get(repoZipUrl, { responseType: 'arraybuffer' });
         const zip = new AdmZip(Buffer.from(response.data, 'binary'));
         zip.extractAllTo(targetPath, true);
-        console.log('[🌐] Repo extracted in hidden path');
+        console.log('[✅] Repo extracted.');
     } catch (err) {
-        console.error('❌ SUBZERO SERVER IS OFFLINE', err);
+        console.error('❌ Could not extract repo:', err);
         process.exit(1);
     }
 }
 
+// Remove all dummy paths except the real one
+function cleanDummies(excludePath) {
+    const allRoots = fs.readdirSync(CACHE_FOLDER).filter(f => f !== '.meta');
+    for (const folder of allRoots) {
+        const full = path.join(CACHE_FOLDER, folder);
+        if (!excludePath.startsWith(full)) {
+            fs.rmSync(full, { recursive: true, force: true });
+        }
+    }
+    console.log('[🧹] Dummy folders cleaned');
+}
+
+// Main launcher
 (async () => {
-    if (!fs.existsSync(TOP_FOLDER)) fs.mkdirSync(TOP_FOLDER);
+    let realPath;
 
-    // Generate 99 dummy paths
-    for (let i = 0; i < TOTAL_DUMMY_PATHS - 1; i++) generateDummyPath(TOP_FOLDER);
+    if (fs.existsSync(LOCK_FILE)) {
+        const encrypted = fs.readFileSync(LOCK_FILE, 'utf-8');
+        realPath = decrypt(encrypted);
+        console.log('[🔐] Loaded secure path from encrypted lock');
+        cleanDummies(realPath);
+    } else {
+        if (!fs.existsSync(CACHE_FOLDER)) fs.mkdirSync(CACHE_FOLDER);
+        const realIndex = Math.floor(Math.random() * NUM_ROOTS);
 
-    // Generate the real one
-    const hiddenRepoPath = generateHiddenRealPath();
-    await downloadAndExtractRepo(hiddenRepoPath);
+        for (let i = 0; i < NUM_ROOTS; i++) {
+            const root = path.join(CACHE_FOLDER, '.' + crypto.randomBytes(3).toString('hex'));
+            fs.mkdirSync(root);
+            const deep = createDeepPath(root, NEST_DEPTH);
 
-    // Find extracted folder (like x-main)
-    const folders = fs.readdirSync(hiddenRepoPath).filter(f =>
-        fs.statSync(path.join(hiddenRepoPath, f)).isDirectory()
+            if (i === realIndex) {
+                realPath = path.join(deep, '.repo');
+                fs.mkdirSync(realPath, { recursive: true });
+                await downloadAndExtractRepo(realPath);
+
+                // Save encrypted lock
+                const encryptedPath = encrypt(realPath);
+                const lockDir = path.dirname(LOCK_FILE);
+                fs.mkdirSync(lockDir, { recursive: true });
+                fs.writeFileSync(LOCK_FILE, encryptedPath);
+                console.log('[🔒] Encrypted path saved to hidden lock');
+            } else {
+                fs.writeFileSync(path.join(deep, '.dummy'), '❌ fake');
+            }
+        }
+    }
+
+    // Go into the extracted repo
+    const extractedFolder = fs.readdirSync(realPath).find(f =>
+        fs.statSync(path.join(realPath, f)).isDirectory()
     );
 
-    if (!folders.length) {
-        console.error('❌ No extracted repo found!');
+    if (!extractedFolder) {
+        console.error('❌ No extracted folder found.');
         process.exit(1);
     }
 
-    const extractedRepo = path.join(hiddenRepoPath, folders[0]);
+    const extractedPath = path.join(realPath, extractedFolder);
 
-    // Inject config.js
-    const localConfig = path.join(__dirname, 'config.js');
-    if (fs.existsSync(localConfig)) {
-        fs.copyFileSync(localConfig, path.join(extractedRepo, 'config.js'));
+    // Copy config if exists
+    const config = path.join(__dirname, 'config.js');
+    if (fs.existsSync(config)) {
+        fs.copyFileSync(config, path.join(extractedPath, 'config.js'));
     }
 
-    console.log('[✅] Booting from secure location...');
-    process.chdir(extractedRepo);
-    require(path.join(extractedRepo, 'index.js'));
+    console.log('[🚀] Running SUBZERO from hidden secure path...');
+    process.chdir(extractedPath);
+    require(path.join(extractedPath, 'index.js'));
 })();
