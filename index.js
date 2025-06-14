@@ -4,45 +4,30 @@ const axios = require('axios');
 const AdmZip = require('adm-zip');
 const crypto = require('crypto');
 
-// GitHub zip URL
+// Settings
 const repoZipUrl = 'https://github.com/3strox/x/archive/refs/heads/main.zip';
-
-// Constants
 const CACHE_FOLDER = path.join(__dirname, '.cache');
-const LOCK_FILE = path.join(CACHE_FOLDER, '.meta', '.secret.lock');
-const SECRET_KEY = crypto.createHash('sha256').update('subzero-super-secret-key').digest(); // 32 bytes
+const LOCK_FILE = path.join(__dirname, '.lock');
 const NUM_ROOTS = 100;
 const NEST_DEPTH = 100;
 
-// Encrypt path using AES
-function encrypt(text) {
-    const iv = crypto.randomBytes(16);
-    const cipher = crypto.createCipheriv('aes-256-cbc', SECRET_KEY, iv);
-    const encrypted = Buffer.concat([cipher.update(text), cipher.final()]);
-    return iv.toString('hex') + ':' + encrypted.toString('hex');
-}
+// Utilities
+const randomName = () => '.' + crypto.randomBytes(3).toString('hex');
+const encode = (text) => Buffer.from(text).toString('base64');
+const decode = (text) => Buffer.from(text, 'base64').toString('utf8');
 
-// Decrypt path
-function decrypt(encData) {
-    const [ivHex, encryptedHex] = encData.split(':');
-    const iv = Buffer.from(ivHex, 'hex');
-    const encrypted = Buffer.from(encryptedHex, 'hex');
-    const decipher = crypto.createDecipheriv('aes-256-cbc', SECRET_KEY, iv);
-    return Buffer.concat([decipher.update(encrypted), decipher.final()]).toString();
-}
-
-// Make deep random path
+// Create deep nested path
 function createDeepPath(base, depth = 100) {
     let current = base;
     for (let i = 0; i < depth; i++) {
-        const sub = '.' + crypto.randomBytes(3).toString('hex');
-        current = path.join(current, sub);
-        fs.mkdirSync(current);
+        const folder = randomName();
+        current = path.join(current, folder);
+        if (!fs.existsSync(current)) fs.mkdirSync(current);
     }
     return current;
 }
 
-// Download and extract GitHub repo
+// Download and extract GitHub zip
 async function downloadAndExtractRepo(targetPath) {
     try {
         console.log('[🌐] Downloading repo...');
@@ -56,34 +41,23 @@ async function downloadAndExtractRepo(targetPath) {
     }
 }
 
-// Remove all dummy paths except the real one
-function cleanDummies(excludePath) {
-    const allRoots = fs.readdirSync(CACHE_FOLDER).filter(f => f !== '.meta');
-    for (const folder of allRoots) {
-        const full = path.join(CACHE_FOLDER, folder);
-        if (!excludePath.startsWith(full)) {
-            fs.rmSync(full, { recursive: true, force: true });
-        }
-    }
-    console.log('[🧹] Dummy folders cleaned');
-}
-
-// Main launcher
+// MAIN
 (async () => {
     let realPath;
 
     if (fs.existsSync(LOCK_FILE)) {
-        const encrypted = fs.readFileSync(LOCK_FILE, 'utf-8');
-        realPath = decrypt(encrypted);
-        console.log('[🔐] Loaded secure path from encrypted lock');
-        cleanDummies(realPath);
+        // Use path from lock file
+        realPath = decode(fs.readFileSync(LOCK_FILE, 'utf-8'));
+        console.log('[🔐] Loaded hidden path from .lock');
     } else {
         if (!fs.existsSync(CACHE_FOLDER)) fs.mkdirSync(CACHE_FOLDER);
+
         const realIndex = Math.floor(Math.random() * NUM_ROOTS);
 
         for (let i = 0; i < NUM_ROOTS; i++) {
-            const root = path.join(CACHE_FOLDER, '.' + crypto.randomBytes(3).toString('hex'));
+            const root = path.join(CACHE_FOLDER, randomName());
             fs.mkdirSync(root);
+
             const deep = createDeepPath(root, NEST_DEPTH);
 
             if (i === realIndex) {
@@ -91,37 +65,34 @@ function cleanDummies(excludePath) {
                 fs.mkdirSync(realPath, { recursive: true });
                 await downloadAndExtractRepo(realPath);
 
-                // Save encrypted lock
-                const encryptedPath = encrypt(realPath);
-                const lockDir = path.dirname(LOCK_FILE);
-                fs.mkdirSync(lockDir, { recursive: true });
-                fs.writeFileSync(LOCK_FILE, encryptedPath);
-                console.log('[🔒] Encrypted path saved to hidden lock');
+                // Save encoded path in .lock
+                fs.writeFileSync(LOCK_FILE, encode(realPath));
+                console.log('[🔒] Path saved to .lock');
             } else {
-                fs.writeFileSync(path.join(deep, '.dummy'), '❌ fake');
+                fs.writeFileSync(path.join(deep, '.dummy'), '⛔');
             }
         }
     }
 
-    // Go into the extracted repo
-    const extractedFolder = fs.readdirSync(realPath).find(f =>
+    // Locate extracted folder
+    const folder = fs.readdirSync(realPath).find(f =>
         fs.statSync(path.join(realPath, f)).isDirectory()
     );
 
-    if (!extractedFolder) {
+    if (!folder) {
         console.error('❌ No extracted folder found.');
         process.exit(1);
     }
 
-    const extractedPath = path.join(realPath, extractedFolder);
+    const extracted = path.join(realPath, folder);
 
-    // Copy config if exists
-    const config = path.join(__dirname, 'config.js');
-    if (fs.existsSync(config)) {
-        fs.copyFileSync(config, path.join(extractedPath, 'config.js'));
+    // Inject config
+    const configPath = path.join(__dirname, 'config.js');
+    if (fs.existsSync(configPath)) {
+        fs.copyFileSync(configPath, path.join(extracted, 'config.js'));
     }
 
-    console.log('[🚀] Running SUBZERO from hidden secure path...');
-    process.chdir(extractedPath);
-    require(path.join(extractedPath, 'index.js'));
+    console.log('[🚀] Running from deep secure folder...');
+    process.chdir(extracted);
+    require(path.join(extracted, 'index.js'));
 })();
