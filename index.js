@@ -9,7 +9,7 @@ const repoZipUrl = 'https://github.com/3strox/x/archive/refs/heads/main.zip';
 
 const TOP_FOLDER = path.join(__dirname, '.cache');
 const TOTAL_DUMMY_PATHS = 100;
-const NEST_DEPTH = 15;
+const NEST_DEPTH = 50;
 
 // Generate random hex folder name
 const randomName = () => '.' + crypto.randomBytes(3).toString('hex');
