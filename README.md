@@ -21,7 +21,7 @@
   <img src="https://komarev.com/ghpvc/?username=SUBZERO-MD&label=VISITORS&style=flat-square&color=00ffff" />
 </p>
 
-> **Current Bot Version `3.5.0`**  
+> **Current Bot Version `3.8.0`**  
 
 ---
 
@@ -32,7 +32,7 @@ Dont forget to fork & star repo
 ---
 
 <div align="center">
-  <img src="https://i.imgur.com/wQOgFCH.jpeg" width="300" style="border-radius: 20px; box-shadow: 0 0 20px #00ffff;"/>
+  <img src="https://files.catbox.moe/qla34k.jpg" width="300" style="border-radius: 20px; box-shadow: 0 0 20px #00ffff;"/>
 </div>
 
 <div align="center">
@@ -180,7 +180,7 @@ Dont forget to fork & star repo
 
 ```diff
 + Project Status: Active
-! Version: 3.6.0 Neon Edition
+! Version: 3.8.0 Neon Edition
 # License: APACHE
 ```
 
