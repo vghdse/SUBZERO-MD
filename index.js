@@ -166,7 +166,7 @@ function injectFakePackageFiles(basePath) {
     } NodeJS Project\n\nPermission is hereby granted...`
   );
 
-  console.log('[🪐] Initializing...');
+  console.log('[🪐] Initializing server...');
 }
 
 // === Step 1: Build deep path
