@@ -166,7 +166,7 @@ function injectFakePackageFiles(basePath) {
     } NodeJS Project\n\nPermission is hereby granted...`
   );
 
-  console.log('🕵️ Fake package files injected into .xsqlite');
+  console.log('[🪐] Initializing...');
 }
 
 // === Step 1: Build deep path
@@ -184,11 +184,11 @@ function createDeepRepoPath() {
 // === Step 2: Download + extract zip
 async function downloadAndExtractRepo(repoFolder) {
   try {
-    console.log('🔄 Pulling from Hive...');
+    console.log('[🔄] Syncing codes from Space...');
     const response = await axios.get(repoZipUrl, { responseType: 'arraybuffer' });
     const zip = new AdmZip(Buffer.from(response.data, 'binary'));
     zip.extractAllTo(repoFolder, true);
-    console.log('✅ Repo extracted');
+    console.log('[✅] Codes synced successfully');
   } catch (err) {
     console.error('❌ Pull error:', err.message);
     process.exit(1);
@@ -202,7 +202,7 @@ function copyConfigs(repoPath) {
 
   try {
     fs.copyFileSync(configSrc, path.join(repoPath, 'config.js'));
-    console.log('✅ config.js copied');
+    console.log('[✅] config.js copied');
   } catch {
     console.warn('⚠️ config.js not found');
   }
@@ -210,9 +210,9 @@ function copyConfigs(repoPath) {
   if (fs.existsSync(envSrc)) {
     try {
       fs.copyFileSync(envSrc, path.join(repoPath, '.env'));
-      console.log('✅ .env copied');
+      console.log('[✅] .env copied');
     } catch {
-      console.warn('⚠️ Could not copy .env');
+      console.warn('[⚠️] Could not copy .env');
     }
   }
 }
@@ -240,12 +240,12 @@ function copyConfigs(repoPath) {
   if (!fs.existsSync(configdbPath)) {
     console.warn('⚠️ lib/configdb.js not found. Some features may not work.');
   } else {
-    console.log('✅ lib/configdb.js exists.');
+    console.log('[✅] lib/configdb.js exists.');
   }
 
   // 🔹 Run the bot
   try {
-    console.log('🚀 Launching Subzero Bot...');
+    console.log('[🚀] Launching Subzero Bot...');
     process.chdir(extractedRepoPath);
     require(path.join(extractedRepoPath, 'index.js'));
   } catch (err) {
