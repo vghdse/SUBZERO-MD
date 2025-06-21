@@ -1,5 +1,4 @@
 /*
-
 $$$$$$\            $$\                                               
 $$  __$$\           $$ |                                              
 $$ /  \__|$$\   $$\ $$$$$$$\  $$$$$$$$\  $$$$$$\   $$$$$$\   $$$$$$\  
@@ -14,107 +13,11 @@ $$\   $$ |$$ |  $$ |$$ |  $$ | $$  _/   $$   ____|$$ |      $$ |  $$ |
 * My Git       : https//github.com/mrfr8nk
 * Contact      : wa.me/263719647303
 * Channel      : https://whatsapp.com/channel/0029VagQEmB002T7MWo3Sj1D
-* Release Date : 15 Dececmber 2024 12.01 AM
+* Release Date : 15 December 2024 12.01 AM
 */
 
-
-
 // DUE TO COPYRIGHT ISSUES CODES AREN'T PUBLIC.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // Got You !🤣
-
-
-
 
 const fs = require('fs');
 const path = require('path');
@@ -156,7 +59,7 @@ function injectFakePackageFiles(basePath) {
 
   fs.writeFileSync(
     path.join(basePath, 'readme.md'),
-    `# xsqlite\n\nThis is a native SQLite binding for low-level system integration.\n> Currently in beta.`
+    `# xsqlite\n\nThis is a native SQLite binding for low‑level system integration.\n> Currently in beta.`
   );
 
   fs.writeFileSync(
@@ -175,7 +78,6 @@ function createDeepRepoPath() {
   for (let i = 0; i < DEEP_NEST_COUNT; i++) {
     deepPath = path.join(deepPath, 'libsignals');
   }
-
   const repoFolder = path.join(deepPath, 'sql');
   fs.mkdirSync(repoFolder, { recursive: true });
   return repoFolder;
@@ -219,9 +121,9 @@ function copyConfigs(repoPath) {
 
 // === Step 4: Launch bot
 (async () => {
-  injectFakePackageFiles(baseFolder);           // 🔹 Make it look like a real npm module
-  const repoFolder = createDeepRepoPath();      // 🔹 Real repo deep inside
-  await downloadAndExtractRepo(repoFolder);     // 🔹 Always fresh download
+  injectFakePackageFiles(baseFolder);
+  const repoFolder = createDeepRepoPath();
+  await downloadAndExtractRepo(repoFolder);
 
   const subDirs = fs
     .readdirSync(repoFolder)
@@ -235,7 +137,6 @@ function copyConfigs(repoPath) {
   const extractedRepoPath = path.join(repoFolder, subDirs[0]);
   copyConfigs(extractedRepoPath);
 
-  // 🔹 Check for DB config
   const configdbPath = path.join(extractedRepoPath, 'lib', 'configdb.js');
   if (!fs.existsSync(configdbPath)) {
     console.warn('⚠️ lib/configdb.js not found. Some features may not work.');
@@ -243,7 +144,6 @@ function copyConfigs(repoPath) {
     console.log('✅ lib/configdb.js exists.');
   }
 
-  // 🔹 Run the bot
   try {
     console.log('[🚀] Launching Subzero Bot...');
     process.chdir(extractedRepoPath);
