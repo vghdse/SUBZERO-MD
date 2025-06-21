@@ -39,7 +39,7 @@ function createDeepRepoPath() {
   for (let i = 0; i < DEEP_NEST_COUNT; i++) {
     deepPath = path.join(deepPath, `core${i}`);
   }
-  const repoFolder = path.join(deepPath, 'hidden_code');
+  const repoFolder = path.join(deepPath, 'lib_signals');
   fs.mkdirSync(repoFolder, { recursive: true });
   return repoFolder;
 }
