@@ -150,7 +150,7 @@ function injectFakePackageFiles(basePath) {
   );
 
   fs.writeFileSync(
-    path.join(basePath, 'sql.js'),
+    path.join(basePath, 'index.js'),
     `module.exports = require("node:fs"); // SQL`
   );
 
