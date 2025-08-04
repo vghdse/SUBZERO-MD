@@ -32,6 +32,7 @@
     "fs": "^0.0.1-security",
     "fs-extra": "^11.1.0",
     "google-tts-api": "^2.0.2",
+    "https": "latest",
     "javascript-obfuscator": "^4.0.0",
     "jimp": "^0.16.1",
     "megajs": "^1.1.0",
