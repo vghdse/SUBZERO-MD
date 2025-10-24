@@ -78,7 +78,7 @@ src="https://dabby.vercel.app/submenu.png">
 ## Credits
 
 - [Dev](https://github.com/mrfr8nk)
-- [Baileys](https://github.com/WhiskeySockets)
+- [Angular Sockets Baileys](https://www.npmjs.com/package/angularsockets)
 
 <h2 align="center">  𝗣𝗢𝗟𝗜𝗧𝗘 𝗡𝗢𝗧𝗜𝗖𝗘!
 </h2>
